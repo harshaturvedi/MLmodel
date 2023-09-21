@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MaxPoolLayer extends Layer{
+
     private int _stepSize;
     private int _windowSize;
 
@@ -14,6 +15,7 @@ public class MaxPoolLayer extends Layer{
     List<int[][]> _lastMaxRow;
     List<int[][]> _lastMaxCol;
 
+
     public MaxPoolLayer(int _stepSize, int _windowSize, int _inLength, int _inRows, int _inCols) {
         this._stepSize = _stepSize;
         this._windowSize = _windowSize;
@@ -22,54 +24,60 @@ public class MaxPoolLayer extends Layer{
         this._inCols = _inCols;
     }
 
-    public List<double[][]> maxPoolForwardPass(List<double[][]> input){
+    public List<double[][]> maxPoolForwardPass(List<double[][]> input) {
+
         List<double[][]> output = new ArrayList<>();
         _lastMaxRow = new ArrayList<>();
         _lastMaxCol = new ArrayList<>();
 
-        for (int i = 0; i < input.size(); i++) {
-            output.add(pool(input.get(i)));
+        for (double[][] doubles : input) {
+            output.add(pool(doubles));
         }
 
         return output;
+
     }
 
     public double[][] pool(double[][] input){
+
         double[][] output = new double[getOutputRows()][getOutputCols()];
 
-        int[][] maxRow = new int[getOutputRows()][getOutputCols()];
-        int[][] maxCol = new int[getOutputRows()][getOutputCols()];
+        int[][] maxRows = new int[getOutputRows()][getOutputCols()];
+        int[][] maxCols = new int[getOutputRows()][getOutputCols()];
 
-        for (int i = 0; i < getOutputRows(); i += _stepSize) {
-            for (int j = 0; j < getOutputCols(); j += _stepSize) {
+        for(int r = 0; r < getOutputRows(); r+= _stepSize){
+            for(int c = 0; c < getOutputCols(); c+= _stepSize){
+
                 double max = 0.0;
-                maxRow[i][j] = -1;
-                maxCol[i][j] = -1;
+                maxRows[r][c] = -1;
+                maxCols[r][c] = -1;
 
-                for (int k = 0; k < _windowSize; k++) {
-                    for (int l = 0; l < _windowSize; l++) {
-                        if(max<input[i+k][j+l]){
-                            max = input[i+k][j+l];
-                            maxRow[i][j] = i+k;
-                            maxCol[i][j] = j+l;
+                for(int x = 0; x < _windowSize; x++){
+                    for(int y = 0; y < _windowSize; y++) {
+                        if(max < input[r+x][c+y]){
+                            max = input[r+x][c+y];
+                            maxRows[r][c] = r+x;
+                            maxCols[r][c] = c+y;
                         }
                     }
                 }
 
-                output[i][j] = max;
+                output[r][c] = max;
+
             }
         }
 
-        _lastMaxRow.add(maxRow);
-        _lastMaxCol.add(maxCol);
+        _lastMaxRow.add(maxRows);
+        _lastMaxCol.add(maxCols);
 
         return output;
+
     }
+
 
     @Override
     public double[] getOutput(List<double[][]> input) {
         List<double[][]> outputPool = maxPoolForwardPass(input);
-
         return _nextLayer.getOutput(outputPool);
     }
 
@@ -80,38 +88,39 @@ public class MaxPoolLayer extends Layer{
     }
 
     @Override
-    public void backPropogation(double[] dLdO) {
+    public void backPropagation(double[] dLdO) {
         List<double[][]> matrixList = vectorToMatrix(dLdO, getOutputLength(), getOutputRows(), getOutputCols());
-
-        backPropogation(matrixList);
+        backPropagation(matrixList);
     }
 
     @Override
-    public void backPropogation(List<double[][]> dLdO) {
+    public void backPropagation(List<double[][]> dLdO) {
+
         List<double[][]> dXdL = new ArrayList<>();
 
-        int i = 0;
-        for (double[][] array : dLdO){
+        int l = 0;
+        for(double[][] array: dLdO){
             double[][] error = new double[_inRows][_inCols];
 
-            for (int j = 0; j < getOutputRows(); j++) {
-                for (int k = 0; k < getOutputCols(); k++) {
-                    int max_i = _lastMaxRow.get(i)[j][k];
-                    int max_j = _lastMaxCol.get(i)[j][k];
+            for(int r = 0; r < getOutputRows(); r++){
+                for(int c = 0; c < getOutputCols(); c++){
+                    int max_i = _lastMaxRow.get(l)[r][c];
+                    int max_j = _lastMaxCol.get(l)[r][c];
 
                     if(max_i != -1){
-                        error[max_i][max_j] += array[j][k];
+                        error[max_i][max_j] += array[r][c];
                     }
                 }
             }
 
             dXdL.add(error);
-            i++;
+            l++;
         }
 
-        if(_prevLayer != null){
-            _prevLayer.backPropogation(dXdL);
+        if(_previousLayer!= null){
+            _previousLayer.backPropagation(dXdL);
         }
+
     }
 
     @Override
@@ -121,16 +130,16 @@ public class MaxPoolLayer extends Layer{
 
     @Override
     public int getOutputRows() {
-        return (_inRows - _windowSize)/_stepSize+1;
+        return (_inRows-_windowSize)/_stepSize + 1;
     }
 
     @Override
     public int getOutputCols() {
-        return (_inCols - _windowSize)/_stepSize+1;
+        return (_inCols-_windowSize)/_stepSize + 1;
     }
 
     @Override
     public int getOutputElements() {
-        return getOutputRows()*getOutputCols()*_inLength;
+        return _inLength*getOutputCols()*getOutputRows();
     }
 }

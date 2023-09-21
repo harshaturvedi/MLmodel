@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Layer {
-    protected Layer _nextLayer;
-    protected Layer _prevLayer;
-
     public Layer get_nextLayer() {
         return _nextLayer;
     }
@@ -15,19 +12,22 @@ public abstract class Layer {
         this._nextLayer = _nextLayer;
     }
 
-    public Layer get_prevLayer() {
-        return _prevLayer;
+    public Layer get_previousLayer() {
+        return _previousLayer;
     }
 
-    public void set_prevLayer(Layer _prevLayer) {
-        this._prevLayer = _prevLayer;
+    public void set_previousLayer(Layer _previousLayer) {
+        this._previousLayer = _previousLayer;
     }
+
+    protected Layer _nextLayer;
+    protected Layer _previousLayer;
 
     public abstract double[] getOutput(List<double[][]> input);
     public abstract double[] getOutput(double[] input);
 
-    public abstract void backPropogation(double[] dLdO);
-    public abstract void backPropogation(List<double[][]> dLdO);
+    public abstract void backPropagation(double[] dLdO);
+    public abstract void backPropagation(List<double[][]> dLdO);
 
     public abstract int getOutputLength();
     public abstract int getOutputRows();
@@ -36,6 +36,7 @@ public abstract class Layer {
 
 
     public double[] matrixToVector(List<double[][]> input){
+
         int length = input.size();
         int rows = input.get(0).length;
         int cols = input.get(0)[0].length;
@@ -43,10 +44,10 @@ public abstract class Layer {
         double[] vector = new double[length*rows*cols];
 
         int i = 0;
-        for(int l = 0; l<length; l++){
-            for (int r = 0; r<rows; r++){
-                for(int c = 0; c<cols; c++){
-                    vector[i] = input.get(l)[r][c];
+        for (double[][] doubles : input) {
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    vector[i] = doubles[r][c];
                     i++;
                 }
             }
@@ -55,15 +56,17 @@ public abstract class Layer {
         return vector;
     }
 
-    public List<double[][]> vectorToMatrix(double[] input, int length, int rows, int cols){
+    List<double[][]> vectorToMatrix(double[] input, int length, int rows, int cols){
+
         List<double[][]> out = new ArrayList<>();
 
         int i = 0;
-        for(int l = 0; l<length; l++){
+        for(int l = 0; l < length; l++ ){
+
             double[][] matrix = new double[rows][cols];
 
-            for (int r = 0; r<rows; r++){
-                for(int c = 0; c<cols; c++){
+            for(int r = 0; r < rows; r++){
+                for(int c = 0; c < cols; c++){
                     matrix[r][c] = input[i];
                     i++;
                 }
@@ -74,4 +77,5 @@ public abstract class Layer {
 
         return out;
     }
+
 }

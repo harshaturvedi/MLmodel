@@ -1,13 +1,9 @@
 package data;
 
 public class Image {
+
     private double[][] data;
     private int label;
-
-    public Image(double[][] data, int label) {
-        this.data = data;
-        this.label = label;
-    }
 
     public double[][] getData() {
         return data;
@@ -17,17 +13,23 @@ public class Image {
         return label;
     }
 
-    @Override
-    public String toString() {
-        String s = label + ", \n";
+    public Image(double[][] data, int label) {
+        this.data = data;
+        this.label = label;
+    }
 
-        for (int i = 0; i < data.length; i++){
+    @Override
+    public String toString(){
+
+        StringBuilder s = new StringBuilder(label + ", \n");
+
+        for (double[] datum : data) {
             for (int j = 0; j < data[0].length; j++) {
-                s+= data[i][j] + ",";
+                s.append(datum[j]).append(", ");
             }
-            s+= "\n";
+            s.append("\n");
         }
 
-        return s;
+        return s.toString();
     }
 }
